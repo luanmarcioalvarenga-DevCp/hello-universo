@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050719"><meta name="description" content="Hello Universo: adaptação web interativa do projeto Java de Luan Márcio.">
+<title>Hello Universo | Demonstração 3D</title>
+<style>
+*{box-sizing:border-box}html{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color-scheme:dark}body{margin:0;background:#040614;color:#e4f6ff;overflow:hidden}canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none}
+.overlay{position:relative;min-height:100svh;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:24px 16px 32px;text-align:center}
+header{color:#8bc8f0;font-size:12px;letter-spacing:.22em;text-shadow:0 0 18px #5185ff}header span{display:block;color:#a8b5dc;font-size:12px;letter-spacing:.1em;margin-top:10px}
+.hero{transform:translateY(-3vh);text-shadow:0 8px 40px #4a3f8c}.hero h1{font-size:clamp(44px,9vw,110px);margin:0;line-height:1.1;letter-spacing:.03em}.hero p{font-size:clamp(13px,2.3vw,20px);color:#aebadf}
+.panel{pointer-events:auto;max-width:750px;width:100%;border:1px solid #7a95cc66;border-radius:18px;background:#0c1232c9;backdrop-filter:blur(12px);padding:15px 18px}
+.actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap}button,a{border:1px solid #6d8fda80;border-radius:9px;background:#203463;color:#edf6ff;padding:10px 15px;font:inherit;text-decoration:none;cursor:pointer}button:hover,a:hover{background:#3854a0}button:focus-visible,a:focus-visible{outline:3px solid #a6d6ff;outline-offset:2px}
+.hint{color:#a9b7da;font-size:12px;line-height:1.5;margin:12px 0 0}
+</style></head><body><canvas id="space" aria-label="Campo de estrelas 3D em movimento"></canvas>
+<main class="overlay"><header><div>MEU PRIMEIRO UNIVERSO</div><span id="status" aria-live="polite">FEITO COM JAVA · 650 ESTRELAS</span></header>
+<div class="hero"><h1>HELLO WORLD</h1><p>Uma pequena mensagem. Um universo de possibilidades.</p></div>
+<section class="panel" aria-label="Controles da animação"><div class="actions"><button id="pause" type="button">⏸ Pausar</button><button id="turbo" type="button">🚀 Ativar turbo</button><button id="reset" type="button">↺ Restaurar</button><a href="https://github.com/luanmarcioalvarenga-DevCp/hello-universo">⌘ Ver código Java</a></div><p class="hint">Mova o mouse ou toque e arraste para mudar a perspectiva · Espaço: pausar · T: turbo</p></section></main>
+<script>
+'use strict';const canvas=document.getElementById('space'),ctx=canvas.getContext('2d',{alpha:false}),N=650,TAU=Math.PI*2;
+let w=0,h=0,dpr=1,mouseX=0,mouseY=0,paused=matchMedia('(prefers-reduced-motion: reduce)').matches,turbo=false,time=0,last=0;
+const stars=[];function spawn(s,initial){s.x=(Math.random()-.5)*2400;s.y=(Math.random()-.5)*1600;s.z=initial?15+Math.random()*1500:1500;s.radius=.7+Math.random()*1.8;s.phase=Math.random()*TAU;s.color=Math.random()>.5?'#85ddff':'#e0c3ff'}
+for(let i=0;i<N;i++){const s={};spawn(s,true);stars.push(s)}
+function resize(){w=innerWidth;h=innerHeight;dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
+function frame(ms){const dt=Math.min(.05,(ms-last)/1000||0);last=ms;if(!paused){time+=dt;for(const s of stars){s.z-=dt*(turbo?720:95);if(s.z<15)spawn(s,false)}}
+const g=ctx.createRadialGradient(w*.5,h*.48,1,w*.5,h*.48,Math.max(1,w*.65));g.addColorStop(0,'#201544');g.addColorStop(.5,'#0a0f26');g.addColorStop(1,'#030510');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+const focal=Math.min(w,h)*.9;for(const s of stars){const factor=focal/s.z,x=w/2+(s.x-mouseX*190)*factor,y=h/2+(s.y-mouseY*190)*factor,r=Math.min(8,s.radius*factor);if(x<-30||x>w+30||y<-30||y>h+30)continue;const brightness=.55+.45*Math.sin(time*1.8+s.phase);ctx.globalAlpha=brightness*.16;ctx.fillStyle=s.color;ctx.beginPath();ctx.arc(x,y,Math.max(.1,r*3),0,TAU);ctx.fill();ctx.globalAlpha=brightness;ctx.beginPath();ctx.arc(x,y,Math.max(.1,r),0,TAU);ctx.fill();if(turbo){const prev=focal/(s.z+65);ctx.strokeStyle=s.color;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(w/2+(s.x-mouseX*190)*prev,h/2+(s.y-mouseY*190)*prev);ctx.stroke()}if(r>2.3){ctx.beginPath();ctx.moveTo(x-r*2,y);ctx.lineTo(x+r*2,y);ctx.moveTo(x,y-r*2);ctx.lineTo(x,y+r*2);ctx.strokeStyle=s.color;ctx.stroke()}}ctx.globalAlpha=1;requestAnimationFrame(frame)}requestAnimationFrame(frame);
+const $=id=>document.getElementById(id);function update(){$('status').textContent=paused?'PAUSADO':turbo?'VIAGEM EM ALTA VELOCIDADE':'FEITO COM JAVA · 650 ESTRELAS';$('pause').textContent=paused?'▶ Continuar':'⏸ Pausar';$('turbo').textContent=turbo?'🌌 Desativar turbo':'🚀 Ativar turbo'}
+$('pause').onclick=()=>{paused=!paused;update()};$('turbo').onclick=()=>{turbo=!turbo;update()};$('reset').onclick=()=>{mouseX=mouseY=0;turbo=false;paused=false;update()};
+canvas.addEventListener('pointermove',e=>{mouseX=(e.clientX-w/2)/Math.max(1,w);mouseY=(e.clientY-h/2)/Math.max(1,h)});
+addEventListener('keydown',e=>{if(e.target.closest('button,a'))return;if(e.code==='Space'){e.preventDefault();paused=!paused;update()}else if(e.key.toLowerCase()==='t'){turbo=!turbo;update()}});update();
+</script></body></html>
